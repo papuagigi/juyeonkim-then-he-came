@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETF 엑스레이 — 내 ETF 바구니, 겹치는 건 없을까?</title>
+<meta name="description" content="사회초년생의 ETF 바구니를 투시해 겹치는 종목·몰린 지역·특수 구조를 쉬운 말로 진단하는 AI 서비스">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231f5fbf'/%3E%3Ccircle cx='32' cy='32' r='12' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M32 6v14M32 44v14M6 32h14M44 32h14' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="brand"><span class="logo" aria-hidden="true"></span><span>ETF 엑스레이</span></div>
+    <h1>내 ETF 바구니,<br>겹치는 건 없을까?</h1>
+    <p class="lead">이름이 다른 ETF를 여러 개 샀는데 속은 같은 종목일 때가 많아요.<br>
+      바구니를 담으면 <b>겹치는 종목 · 몰린 지역 · 특수 구조</b>를 투시하고, 생성형 AI가 쉬운 말로 진단서를 써 드립니다.</p>
+    <div class="badges">
+      <span class="badge" id="badge-data">국내 상장 ETF 1,162종 · 구성종목 7.4만 건</span>
+      <span class="badge">기준일 2026-08-22</span>
+      <span class="badge">투자 권유 아님</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card" id="build">
+    <h2><span class="step">1</span> 내 ETF 바구니 담기</h2>
+    <p class="hint">이름·브랜드·종목코드로 검색해서 담고, 금액(만원)을 적어 주세요. 처음이면 아래 <b>예시 바구니</b>를 눌러 보세요.</p>
+    <div class="search">
+      <input id="q" type="search" autocomplete="off" placeholder="예) 타이거 나스닥, KODEX 200, 069500" aria-label="ETF 검색">
+      <div id="sugg" class="sugg" role="listbox" hidden></div>
+    </div>
+    <div class="chips" id="samples" aria-label="예시 바구니"></div>
+    <ul id="basket" class="basket" aria-live="polite"></ul>
+    <div class="total-row">
+      <div>합계 <b id="total">0</b>만원 · ETF <b id="cnt">0</b>개</div>
+      <button id="clear" class="ghost" type="button">비우기</button>
+    </div>
+    <button id="xray" class="primary big" type="button" disabled>투시하기</button>
+  </section>
+
+  <nav id="tabs" class="tabs" hidden>
+    <a href="#sec-overview">한눈에</a><a href="#sec-overlap">겹침</a><a href="#sec-findings">발견</a>
+    <a href="#sec-ai">AI 진단서</a><a href="#sec-terms">이름 해독</a><a href="#sec-alt">같은 지수</a>
+  </nav>
+
+  <div id="results" hidden>
+    <section class="card" id="sec-overview">
+      <h2><span class="step">2</span> 한눈에 보기</h2>
+      <div class="kpis" id="kpis"></div>
+      <div id="comp"></div>
+      <p class="note" id="comp-note"></p>
+    </section>
+
+    <section class="card" id="sec-overlap">
+      <h2><span class="step">3</span> 겹침 투시</h2>
+      <h3>ETF끼리 얼마나 겹치나요?</h3>
+      <div id="pairs"></div>
+      <h3>여러 ETF에 함께 들어 있는 종목</h3>
+      <p class="hint">내 돈 중 얼마가 이 종목을 담은 ETF에 들어 있는지(<b>담은 ETF 금액 비중</b>)와, 비중이 공개된 ETF에서 계산한 <b>확인된 실효 비중</b>을 보여 줍니다.</p>
+      <div id="common"></div>
+      <div id="exposure"></div>
+    </section>
+
+    <section class="card" id="sec-findings">
+      <h2><span class="step">4</span> 발견한 점</h2>
+      <div id="findings"></div>
+    </section>
+
+    <section class="card" id="sec-ai">
+      <h2><span class="step">5</span> AI 진단서</h2>
+      <p class="hint">위에서 계산한 근거만 생성형 AI에 넘겨 쉬운 말로 씁니다. 근거에 없는 숫자가 든 문장은 자동으로 지웁니다(사후 대조). 추천·전망은 하지 않습니다.</p>
+      <button id="ai-btn" class="primary" type="button">AI 진단서 받기</button>
+      <div id="ai-status" class="status"></div>
+      <article id="ai-report" class="report" hidden></article>
+      <details id="ai-evidence" hidden><summary>AI에 넘긴 근거 보기</summary><pre id="ai-evidence-text"></pre></details>
+    </section>
+
+    <section class="card" id="sec-terms">
+      <h2><span class="step">6</span> 이름 해독</h2>
+      <p class="hint">상품 이름 속 낱말이 무슨 뜻인지, 왜 신경 써야 하는지 풀어 씁니다.</p>
+      <div id="terms"></div>
+    </section>
+
+    <section class="card" id="sec-alt">
+      <h2><span class="step">7</span> 같은 지수를 따르는 다른 ETF</h2>
+      <p class="hint">같은 지수를 따르면 내용물이 거의 같습니다. 순자산·분배수익률·지난 1년 수익률·변동성을 나란히 놓고 비교만 합니다(추천 아님).</p>
+      <div id="alts"></div>
+    </section>
+
+    <section class="card share">
+      <h2>공유</h2>
+      <p class="hint">아래 주소를 복사하면 같은 바구니를 다른 사람도 볼 수 있어요.</p>
+      <div class="share-row"><input id="share-url" readonly aria-label="공유 주소"><button id="copy" class="ghost" type="button">복사</button></div>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap foot">
+  <p><b>데이터 출처</b> 국내 상장 ETF 마스터(기준일 2026-08-22, 미래에셋증권 AI Festival 제공 데이터) · ETF 구성종목(한국거래소 정보데이터시스템에서 직접 수집, 기준일 2026-08-21). 해외 주식 구성종목은 원천에 비중이 없어 종목 이름만 씁니다.</p>
+  <p><b>알려 드립니다</b> 이 서비스는 공개 데이터로 계산한 사실을 쉬운 말로 설명할 뿐, 특정 상품의 매수·매도를 권유하지 않습니다. 기준일 이후의 변화는 반영되어 있지 않습니다.</p>
+  <p>2026 금융 AI Challenge 출품작 · 팀 <b>김주연 등장</b> · <a id="api-link" href="#" hidden>AI 서버 상태</a></p>
+</footer>
+
+<script src="config.js"></script>
+<script src="assets/terms.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

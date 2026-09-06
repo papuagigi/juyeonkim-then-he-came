@@ -1,0 +1,24 @@
+{
+  "asof_master": "2026-08-22",
+  "asof_holdings": "2026-08-21",
+  "etfs": 1162,
+  "etfs_with_holdings": 1160,
+  "securities": 11351,
+  "holding_pairs": 74010,
+  "pairs_with_weight": 30200,
+  "security_types": {
+    "KS": 790,
+    "FS": 5747,
+    "KQ": 571,
+    "BD": 1886,
+    "DV": 99,
+    "RT": 17,
+    "EF": 165,
+    "OT": 22,
+    "MM": 2046,
+    "CM": 1,
+    "EN": 7
+  },
+  "etfs_fully_weighted": 375,
+  "etfs_unweighted": 754
+}
