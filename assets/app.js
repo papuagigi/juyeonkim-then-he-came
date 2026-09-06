@@ -258,8 +258,11 @@
     $("#share-url").value = shareUrl();
     history.replaceState(null, "", "#b=" + encodeURIComponent(basket.map((b) => `${byIsin[b.isin].code}:${b.amount}`).join(",")));
     const go = (location.hash.match(/[#&]go=([a-z-]+)/) || [])[1];
-    if (go && document.getElementById(go)) setTimeout(() => document.getElementById(go).scrollIntoView({ block: "start" }), 300);
-    else $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (go && document.getElementById(go)) {   // 문서용 그림: 지정한 구역만 보이게(머리글·바구니·다른 구역 숨김)
+      document.querySelector(".hero").hidden = true; $("#build").hidden = true; $("#tabs").hidden = true;
+      for (const s of document.querySelectorAll("#results > section")) s.hidden = s.id !== go;
+      window.scrollTo(0, 0);
+    } else $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // ---------- 이름 해독 ----------
