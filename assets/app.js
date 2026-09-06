@@ -213,6 +213,7 @@
   }
   function render(r) {
     last = r;
+    const flags = location.hash;   // ai=1 · go=구역 은 주소를 바꾸기 전에 읽어 둔다
     $("#results").hidden = false; $("#tabs").hidden = false;
     const kpi = [
       [r.items.length, "ETF 개수"], [fmt(r.uniqueSec, 0), "서로 다른 종목 수"], [fmt(r.sharedSec, 0), "2개 이상 ETF에 겹친 종목"],
@@ -257,12 +258,13 @@
     }).join("");
     $("#share-url").value = shareUrl();
     history.replaceState(null, "", "#b=" + encodeURIComponent(basket.map((b) => `${byIsin[b.isin].code}:${b.amount}`).join(",")));
-    const go = (location.hash.match(/[#&]go=([a-z-]+)/) || [])[1];
+    const go = (flags.match(/[#&]go=([a-z-]+)/) || [])[1];
     if (go && document.getElementById(go)) {   // 문서용 그림: 지정한 구역만 보이게(머리글·바구니·다른 구역 숨김)
       document.querySelector(".hero").hidden = true; $("#build").hidden = true; $("#tabs").hidden = true;
       for (const s of document.querySelectorAll("#results > section")) s.hidden = s.id !== go;
       window.scrollTo(0, 0);
     } else $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (/[#&]ai=1/.test(flags)) diagnose();
   }
 
   // ---------- 이름 해독 ----------
@@ -362,6 +364,6 @@
     } catch (e) { /* 서버 없음 — 규칙 진단서로 동작 */ }
   }
 
-  load().then(() => { bind(); const fromHash = restore(); renderBasket(); checkApi(); if (fromHash) { render(analyze()); if (/[#&]ai=1/.test(location.hash)) diagnose(); } })
+  load().then(() => { bind(); const fromHash = restore(); renderBasket(); checkApi(); if (fromHash) render(analyze()); })
     .catch((e) => { $("#build").insertAdjacentHTML("afterbegin", `<p class="finding warn">데이터를 불러오지 못했어요: ${esc(e.message)}</p>`); });
 })();
