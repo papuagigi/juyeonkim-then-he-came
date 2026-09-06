@@ -146,7 +146,10 @@
         for (const [i] of A.h) if (sb.has(i)) n++;
         overlap = 100 * n / Math.min(A.h.length, B.h.length); basis = "종목 수 기준";
       }
-      pairs.push({ a: A.e.name, b: B.e.name, overlap: +overlap.toFixed(1), basis, sameIndex: !!(A.e.index && A.e.index === B.e.index) });
+      const sizeRatio = Math.min(A.h.length, B.h.length) / Math.max(A.h.length, B.h.length);   // 종목 수가 크게 다르면 '포함 관계'
+      const small = A.h.length <= B.h.length ? A.e.name : B.e.name, big = A.h.length <= B.h.length ? B.e.name : A.e.name;
+      pairs.push({ a: A.e.name, b: B.e.name, overlap: +overlap.toFixed(1), basis, sameIndex: !!(A.e.index && A.e.index === B.e.index),
+        contained: basis === "종목 수 기준" && sizeRatio < 0.5, small, big, nSmall: Math.min(A.h.length, B.h.length), nBig: Math.max(A.h.length, B.h.length) });
     }
     pairs.sort((x, y) => y.overlap - x.overlap);
 
@@ -169,9 +172,11 @@
       const share = arr.reduce((a, it) => a + it.w * 100, 0);
       F.push({ code: "same_index", level: "warn", title: `같은 지수를 따르는 ETF를 ${arr.length}개 갖고 있어요`, detail: `${names(arr)}는 모두 '${idx}' 지수를 따릅니다. 이름과 운용사만 다를 뿐 내용물은 거의 같아서, 나눠 산 효과(분산)가 거의 없습니다. 내 돈의 ${share.toFixed(1)}%가 여기에 있어요.` });
     }
-    const high = r.pairs.filter((p) => !p.sameIndex && p.overlap >= 70);
+    const high = r.pairs.filter((p) => !p.sameIndex && !p.contained && p.overlap >= 70);
     if (high.length) F.push({ code: "high_overlap", level: "warn", title: high.length === 1 ? `${high[0].a}와 ${high[0].b}가 ${high[0].overlap}% 겹쳐요` : `70% 넘게 겹치는 ETF 쌍이 ${high.length}개 있어요`, detail: `${high.map((p) => `${p.a} ↔ ${p.b} ${p.overlap}%(${p.basis})`).join(", ")}. 둘 다 갖고 있으면 한 상품을 두 번 산 것과 비슷합니다.` });
-    const mid = r.pairs.filter((p) => !p.sameIndex && p.overlap >= 40 && p.overlap < 70);
+    const cont = r.pairs.filter((p) => p.contained && p.overlap >= 70);
+    if (cont.length) F.push({ code: "contained", level: "info", title: cont.length === 1 ? `${cont[0].small}의 종목이 ${cont[0].big} 안에 거의 다 들어 있어요` : `작은 ETF가 큰 ETF 안에 들어 있는 쌍이 ${cont.length}개 있어요`, detail: `${cont.map((p) => `${p.small}(${p.nSmall}종목)의 ${p.overlap}%가 ${p.big}(${p.nBig}종목)에도 포함`).join(", ")}. 종목 수가 적은 ETF는 큰 ETF의 일부를 더 진하게 산 것과 같아서, 그 종목들의 비중이 두 배로 실립니다.` });
+    const mid = r.pairs.filter((p) => !p.sameIndex && !p.contained && p.overlap >= 40 && p.overlap < 70);
     if (mid.length) F.push({ code: "mid_overlap", level: "info", title: mid.length === 1 ? `${mid[0].a}와 ${mid[0].b}가 ${mid[0].overlap}% 겹쳐요` : `40~70% 겹치는 ETF 쌍이 ${mid.length}개 있어요`, detail: `${mid.map((p) => `${p.a} ↔ ${p.b} ${p.overlap}%(${p.basis})`).join(", ")}. 서로 다른 이름이지만 절반 가까이 같은 곳에 투자하고 있어요.` });
     // 공통 종목
     const top = r.common[0];
@@ -227,7 +232,7 @@
 
     // 쌍
     if (!r.pairs.length) $("#pairs").innerHTML = `<p class="empty">비교할 ETF 쌍이 없어요. ETF를 두 개 이상 담아 보세요.</p>`;
-    else $("#pairs").innerHTML = r.pairs.map((p) => `<div class="pair"><div><div class="p-names">${esc(p.a)} ↔ ${esc(p.b)}${p.sameIndex ? '<span class="tag warn">같은 지수</span>' : ""}${p.overlap >= 70 && !p.sameIndex ? '<span class="tag warn">사실상 같은 상품</span>' : ""}</div><div class="p-bar${p.overlap >= 70 ? " warn" : ""}"><span style="width:${Math.min(100, p.overlap)}%"></span></div></div><div><div class="p-pct">${pct(p.overlap)}</div><div class="p-basis">${p.basis}</div></div></div>`).join("");
+    else $("#pairs").innerHTML = r.pairs.map((p) => `<div class="pair"><div><div class="p-names">${esc(p.a)} ↔ ${esc(p.b)}${p.sameIndex ? '<span class="tag warn">같은 지수</span>' : ""}${p.overlap >= 70 && !p.sameIndex && !p.contained ? '<span class="tag warn">사실상 같은 상품</span>' : ""}${p.overlap >= 70 && p.contained ? '<span class="tag">포함 관계</span>' : ""}</div><div class="p-bar${p.overlap >= 70 ? " warn" : ""}"><span style="width:${Math.min(100, p.overlap)}%"></span></div></div><div><div class="p-pct">${pct(p.overlap)}</div><div class="p-basis">${p.basis}</div></div></div>`).join("");
     // 공통 종목
     if (!r.common.length) $("#common").innerHTML = `<p class="empty">두 개 이상의 ETF에 함께 들어 있는 종목이 없어요.</p>`;
     else $("#common").innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>종목</th><th>유형</th><th class="num">담은 ETF</th><th class="num">담은 ETF 금액 비중</th><th class="num">확인된 실효 비중</th></tr></thead><tbody>` +
