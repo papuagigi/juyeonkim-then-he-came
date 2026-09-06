@@ -257,7 +257,9 @@
     }).join("");
     $("#share-url").value = shareUrl();
     history.replaceState(null, "", "#b=" + encodeURIComponent(basket.map((b) => `${byIsin[b.isin].code}:${b.amount}`).join(",")));
-    $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+    const go = (location.hash.match(/[#&]go=([a-z-]+)/) || [])[1];
+    if (go && document.getElementById(go)) setTimeout(() => document.getElementById(go).scrollIntoView({ block: "start" }), 300);
+    else $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // ---------- 이름 해독 ----------
