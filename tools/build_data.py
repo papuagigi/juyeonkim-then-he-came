@@ -34,6 +34,15 @@ ASSET_KO = {
     "Equity": "주식", "Bond": "채권", "Alternatives": "대체(파생·구조화)", "Mixed Assets": "혼합자산",
     "Money Market": "단기금융(현금성)", "Commodity": "원자재", "Other": "기타",
 }
+# 투자 지역: 원천의 한글 지역 컬럼(wu_inv_rgn)은 오류가 많아('TIGER 미국나스닥100'→아시아, 'PLUS K방산'→미국)
+# 영문 지역 초점 컬럼(ref_geo_focus)을 우선 쓰고, 그것이 없을 때만 한글 컬럼을 쓴다.
+GEO_KO = {
+    "Korea": "국내", "United States of America": "미국", "Global": "글로벌", "China": "중국", "Japan": "일본",
+    "India": "인도", "Europe": "유럽", "EuroZone": "유럽", "Germany": "유럽", "Asia Pacific ex Japan": "아시아",
+    "Asia (ex-Japan)": "아시아", "Asia Pacific": "아시아", "Global Emerging Markets": "신흥국",
+    "Global Ex US": "글로벌(미국 제외)", "Vietnam": "베트남", "Taiwan": "대만", "Indonesia": "아시아",
+    "Philippines": "아시아", "Singapore": "아시아", "Mexico": "중남미", "Latin America": "중남미",
+}
 ISIN_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
 CASH_RE = re.compile(r"현금|예금|설정현금액|외국환포워드")
 FUT_RE = re.compile(r"\b(FUT|FUTURE|FUTURES|E-MINI|EMINI|INDEX FUT)\b|\d{4} \d{2}$|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC) ?20\d\d", re.I)
@@ -130,7 +139,7 @@ def main():
         etfs.append({
             "isin": isin, "code": (ticker or "").strip(), "name": name, "full": (full or "").strip(),
             "mgmt": (mgmt or "").strip() or None, "index": (idx or "").strip() or None,
-            "asset": ASSET_KO.get(ast, ast) if ast else None, "region": rgn or None, "geo": geo or None,
+            "asset": ASSET_KO.get(ast, ast) if ast else None, "region": GEO_KO.get(geo) or rgn or None, "geo": geo or None,
             "risk": fint(risk), "aum": fnum(aum), "price": fnum(clpr), "dy": fnum(dy), "dc": dc or None,
             "er1y": fnum(er1y), "er3m": fnum(er3m), "erytd": fnum(erytd), "vol1y": fnum(vol1y),
             "strat": strat or None, "lev": fint(lev) or 1, "inverse": inverse, "listed": fdate(lstg),
